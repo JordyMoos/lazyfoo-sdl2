@@ -31,10 +31,21 @@ int mainWrapper() {
         return -2;
     }
 
-    SDL_BlitSurface(gHelloWorld, NULL, gScreenSurface, NULL);
-    SDL_UpdateWindowSurface(gWindow);
+    bool quit = false;
+    SDL_Event e;
 
-    SDL_Delay(2000);
+    while ( ! quit) {
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) {
+                quit = true;
+            }
+        }
+
+        SDL_BlitSurface(gHelloWorld, NULL, gScreenSurface, NULL);
+        SDL_UpdateWindowSurface(gWindow);
+
+        SDL_Delay(16);
+    }
 
     return 0;
 }
