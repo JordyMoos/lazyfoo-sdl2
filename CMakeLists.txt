@@ -17,3 +17,12 @@ include_directories(${SDL2_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} main.cpp)
 
 target_link_libraries(${PROJECT_NAME} SDL2::Main SDL2::Image SDL2::Mixer SDL2::TTF SDL2::GFX)
+
+set (assets_source "${CMAKE_SOURCE_DIR}/assets")
+set (assets_destination "${CMAKE_CURRENT_BINARY_DIR}/assets")
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${assets_source} ${assets_destination}
+        DEPENDS ${assets_destination}
+        COMMENT "symbolic link assets folder from ${assets_source} => ${assets_destination}"
+)
