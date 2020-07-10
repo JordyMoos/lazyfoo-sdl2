@@ -1,18 +1,10 @@
 #include <stdio.h>
-#include <SDL.h>
 #include <string>
+#include <SDL.h>
+#include <SDL_image.h>
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
-
-enum KeyPressSurfaces {
-    KEY_PRESS_SURFACE_DEFAULT,
-    KEY_PRESS_SURFACE_UP,
-    KEY_PRESS_SURFACE_DOWN,
-    KEY_PRESS_SURFACE_LEFT,
-    KEY_PRESS_SURFACE_RIGHT,
-    KEY_PRESS_SURFACE_TOTAL
-};
 
 int mainWrapper();
 
@@ -26,7 +18,6 @@ SDL_Surface* loadSurface(const std::string &path);
 
 SDL_Window *gWindow = nullptr;
 SDL_Surface *gScreenSurface = nullptr;
-SDL_Surface *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Surface *gCurrentSurface = nullptr;
 
 
@@ -50,30 +41,11 @@ int mainWrapper() {
 
     bool quit = false;
     SDL_Event e;
-    gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
-            } else if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                    case SDLK_UP:
-                        gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
-                        break;
-                    case SDLK_DOWN:
-                        gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
-                        break;
-                    case SDLK_LEFT:
-                        gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
-                        break;
-                    case SDLK_RIGHT:
-                        gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
-                        break;
-                    default:
-                        gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
-                        break;
-                }
             }
         }
 
@@ -110,49 +82,30 @@ bool init() {
         return false;
     }
 
+    int imgFlags = IMG_INIT_PNG;
+    if ( ! (IMG_Init(imgFlags) & imgFlags)) {
+        printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
+        return false;
+    }
+
     gScreenSurface = SDL_GetWindowSurface(gWindow);
     return true;
 }
 
 bool loadMedia() {
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("assets/stretch.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == nullptr) {
-        printf("Failed to load stretch image!\n");
+    gCurrentSurface = loadSurface("assets/loaded.png");
+    if (gCurrentSurface == nullptr) {
+        printf("Failed to load loaded.png!\n");
         return false;
     }
 
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] = loadSurface("assets/up.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_UP] == nullptr) {
-        printf("Failed to load up image!\n");
-        return false;
-    }
-
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] = loadSurface("assets/down.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN] == nullptr) {
-        printf("Failed to load down image!\n");
-        return false;
-    }
-
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] = loadSurface("assets/left.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT] == nullptr) {
-        printf("Failed to load left image!\n");
-        return false;
-    }
-
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] = loadSurface("assets/right.bmp");
-    if (gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT] == nullptr) {
-        printf("Failed to load right image!\n");
-        return false;
-    }
 
     return true;
 }
 
 void close() {
-    for (auto &gKeyPressSurface : gKeyPressSurfaces) {
-        SDL_FreeSurface(gKeyPressSurface);
-        gKeyPressSurface = nullptr;
-    }
+    SDL_FreeSurface(gCurrentSurface);
+    gCurrentSurface = nullptr;
 
     SDL_DestroyWindow(gWindow);
     gWindow = nullptr;
@@ -163,9 +116,9 @@ void close() {
 SDL_Surface* loadSurface(const std::string &path) {
     SDL_Surface* optimizedSurface = nullptr;
 
-    SDL_Surface *loadedSurface = SDL_LoadBMP(path.c_str());
+    SDL_Surface *loadedSurface = IMG_Load(path.c_str());
     if (loadedSurface == nullptr) {
-        printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+        printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), IMG_GetError());
         return optimizedSurface;
     }
 
