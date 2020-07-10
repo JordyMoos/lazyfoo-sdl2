@@ -16,9 +16,7 @@ void close();
 
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
-
-SDL_Rect gSpriteClips[4];
-Texture gSpriteSheetTexture;
+Texture gModulatedTexture;
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -41,20 +39,55 @@ int mainWrapper() {
     bool quit = false;
     SDL_Event e;
 
+    Uint8 r = 255;
+    Uint8 g = 255;
+    Uint8 b = 255;
+
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            }
+            else if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                    //Increase red
+                    case SDLK_q:
+                        r += 32;
+                        break;
+
+                        //Increase green
+                    case SDLK_w:
+                        g += 32;
+                        break;
+
+                        //Increase blue
+                    case SDLK_e:
+                        b += 32;
+                        break;
+
+                        //Decrease red
+                    case SDLK_a:
+                        r -= 32;
+                        break;
+
+                        //Decrease green
+                    case SDLK_s:
+                        g -= 32;
+                        break;
+
+                        //Decrease blue
+                    case SDLK_d:
+                        b -= 32;
+                        break;
+                }
             }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gSpriteSheetTexture.render(0, 0, &gSpriteClips[0]);
-        gSpriteSheetTexture.render(SCREEN_WIDTH - gSpriteClips[1].w, 0, &gSpriteClips[1]);
-        gSpriteSheetTexture.render(0, SCREEN_HEIGHT - gSpriteClips[2].h, &gSpriteClips[2]);
-        gSpriteSheetTexture.render(SCREEN_WIDTH - gSpriteClips[3].w, SCREEN_HEIGHT - gSpriteClips[3].h, &gSpriteClips[3]);
+        gModulatedTexture.setColor(r, g, b);
+        gModulatedTexture.render(0, 0);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -83,14 +116,14 @@ bool init() {
 
     gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
     if (gRenderer == nullptr) {
-        printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+        printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         return false;
     }
     SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
 
     int imgFlags = IMG_INIT_PNG;
-    if ( ! (IMG_Init(imgFlags) & imgFlags)) {
-        printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
+    if (!(IMG_Init(imgFlags) & imgFlags)) {
+        printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
         return false;
     }
 
@@ -99,41 +132,16 @@ bool init() {
 
 bool loadMedia() {
     //Load sprite sheet texture
-    if( !gSpriteSheetTexture.loadFromFile( "assets/dots.png" ) )
-    {
-        printf( "Failed to load sprite sheet texture!\n" );
+    if (!gModulatedTexture.loadFromFile("assets/colors.png")) {
+        printf("Failed to load colors.png texture!\n");
         return false;
     }
-
-    //Set top left sprite
-    gSpriteClips[ 0 ].x =   0;
-    gSpriteClips[ 0 ].y =   0;
-    gSpriteClips[ 0 ].w = 100;
-    gSpriteClips[ 0 ].h = 100;
-
-    //Set top right sprite
-    gSpriteClips[ 1 ].x = 100;
-    gSpriteClips[ 1 ].y =   0;
-    gSpriteClips[ 1 ].w = 100;
-    gSpriteClips[ 1 ].h = 100;
-
-    //Set bottom left sprite
-    gSpriteClips[ 2 ].x =   0;
-    gSpriteClips[ 2 ].y = 100;
-    gSpriteClips[ 2 ].w = 100;
-    gSpriteClips[ 2 ].h = 100;
-
-    //Set bottom right sprite
-    gSpriteClips[ 3 ].x = 100;
-    gSpriteClips[ 3 ].y = 100;
-    gSpriteClips[ 3 ].w = 100;
-    gSpriteClips[ 3 ].h = 100;
 
     return true;
 }
 
 void close() {
-    gSpriteSheetTexture.free();
+    gModulatedTexture.free();
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
