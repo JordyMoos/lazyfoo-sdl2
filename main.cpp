@@ -1,7 +1,7 @@
 #include <cstdio>
-#include <string>
 #include <SDL.h>
 #include <SDL_image.h>
+#include "Texture.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -14,12 +14,10 @@ bool loadMedia();
 
 void close();
 
-SDL_Texture* loadTexture(const std::string &path);
-
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
-SDL_Texture *gTexture = nullptr;
-
+Texture gFooTexture;
+Texture gBackgroundTexture;
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -52,29 +50,8 @@ int mainWrapper() {
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        SDL_Rect topLeftViewport;
-        topLeftViewport.x = 0;
-        topLeftViewport.y = 0;
-        topLeftViewport.w = SCREEN_WIDTH / 2;
-        topLeftViewport.h = SCREEN_HEIGHT / 2;
-        SDL_RenderSetViewport(gRenderer, &topLeftViewport);
-        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
-
-        SDL_Rect topRightViewport;
-        topRightViewport.x = SCREEN_WIDTH / 2;
-        topRightViewport.y = 0;
-        topRightViewport.w = SCREEN_WIDTH / 2;
-        topRightViewport.h = SCREEN_HEIGHT / 2;
-        SDL_RenderSetViewport(gRenderer, &topRightViewport);
-        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
-
-        SDL_Rect bottomViewport;
-        bottomViewport.x = 0;
-        bottomViewport.y = SCREEN_HEIGHT / 2;
-        bottomViewport.w = SCREEN_WIDTH;
-        bottomViewport.h = SCREEN_HEIGHT / 2;
-        SDL_RenderSetViewport(gRenderer, &bottomViewport);
-        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
+        gBackgroundTexture.render(0, 0);
+        gFooTexture.render(240, 190);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -118,9 +95,13 @@ bool init() {
 }
 
 bool loadMedia() {
-    gTexture = loadTexture("assets/loaded.png");
-    if (gTexture == nullptr) {
-        printf("Failed to load loaded.png!\n");
+    if ( !gFooTexture.loadFromFile("assets/foo.png")) {
+        printf( "Failed to load Foo' texture image!\n" );
+        return false;
+    }
+
+    if ( !gBackgroundTexture.loadFromFile("assets/background.png")) {
+        printf( "Failed to load background texture image!\n" );
         return false;
     }
 
@@ -128,10 +109,8 @@ bool loadMedia() {
 }
 
 void close() {
-    if (gTexture != nullptr) {
-        SDL_DestroyTexture(gTexture);
-        gTexture = nullptr;
-    }
+    gFooTexture.free();
+    gBackgroundTexture.free();
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
@@ -145,21 +124,4 @@ void close() {
 
     IMG_Quit();
     SDL_Quit();
-}
-
-SDL_Texture* loadTexture(const std::string &path) {
-    SDL_Surface *loadedSurface = IMG_Load(path.c_str());
-    if (loadedSurface == nullptr) {
-        printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), IMG_GetError());
-        return nullptr;
-    }
-
-    SDL_Texture *newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
-    SDL_FreeSurface(loadedSurface);
-    if (newTexture == nullptr) {
-        printf( "Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
-        return nullptr;
-    }
-
-    return newTexture;
 }
