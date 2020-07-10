@@ -52,31 +52,29 @@ int mainWrapper() {
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        SDL_Rect fillRect = {
-                SCREEN_WIDTH / 4,
-                SCREEN_HEIGHT / 4,
-                SCREEN_WIDTH / 2,
-                SCREEN_HEIGHT / 2,
-        };
-        SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
-        SDL_RenderFillRect(gRenderer, &fillRect);
+        SDL_Rect topLeftViewport;
+        topLeftViewport.x = 0;
+        topLeftViewport.y = 0;
+        topLeftViewport.w = SCREEN_WIDTH / 2;
+        topLeftViewport.h = SCREEN_HEIGHT / 2;
+        SDL_RenderSetViewport(gRenderer, &topLeftViewport);
+        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 
-        SDL_Rect outlineRect = {
-                SCREEN_WIDTH / 6,
-                SCREEN_HEIGHT / 6,
-                SCREEN_WIDTH * 2 /3,
-                SCREEN_HEIGHT * 2 / 3,
-        };
-        SDL_SetRenderDrawColor(gRenderer, 0x00, 0xFF, 0x00, 0xFF);
-        SDL_RenderDrawRect(gRenderer, &outlineRect);
+        SDL_Rect topRightViewport;
+        topRightViewport.x = SCREEN_WIDTH / 2;
+        topRightViewport.y = 0;
+        topRightViewport.w = SCREEN_WIDTH / 2;
+        topRightViewport.h = SCREEN_HEIGHT / 2;
+        SDL_RenderSetViewport(gRenderer, &topRightViewport);
+        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 
-        SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0xFF, 0xFF);
-        SDL_RenderDrawLine(gRenderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
-
-        SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0x00, 0xFF);
-        for (int i = 0;i < SCREEN_HEIGHT; i += 4) {
-            SDL_RenderDrawPoint(gRenderer, SCREEN_WIDTH / 2, i);
-        }
+        SDL_Rect bottomViewport;
+        bottomViewport.x = 0;
+        bottomViewport.y = SCREEN_HEIGHT / 2;
+        bottomViewport.w = SCREEN_WIDTH;
+        bottomViewport.h = SCREEN_HEIGHT / 2;
+        SDL_RenderSetViewport(gRenderer, &bottomViewport);
+        SDL_RenderCopy(gRenderer, gTexture, NULL, NULL);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
