@@ -22,7 +22,7 @@ bool loadMedia();
 
 void close();
 
-SDL_Surface *loadSurface(const std::string &path);
+SDL_Surface* loadSurface(const std::string &path);
 
 SDL_Window *gWindow = nullptr;
 SDL_Surface *gScreenSurface = nullptr;
@@ -77,7 +77,13 @@ int mainWrapper() {
             }
         }
 
-        SDL_BlitSurface(gCurrentSurface, NULL, gScreenSurface, NULL);
+        SDL_Rect stretchRect;
+        stretchRect.x = 0;
+        stretchRect.y = 0;
+        stretchRect.w = SCREEN_WIDTH;
+        stretchRect.h = SCREEN_HEIGHT;
+
+        SDL_BlitScaled(gCurrentSurface, NULL, gScreenSurface, &stretchRect);
         SDL_UpdateWindowSurface(gWindow);
 
         SDL_Delay(16);
@@ -109,9 +115,9 @@ bool init() {
 }
 
 bool loadMedia() {
-    gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("assets/press.bmp");
+    gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] = loadSurface("assets/stretch.bmp");
     if (gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT] == nullptr) {
-        printf("Failed to load default image!\n");
+        printf("Failed to load stretch image!\n");
         return false;
     }
 
@@ -154,11 +160,22 @@ void close() {
     SDL_Quit();
 }
 
-SDL_Surface *loadSurface(const std::string &path) {
+SDL_Surface* loadSurface(const std::string &path) {
+    SDL_Surface* optimizedSurface = nullptr;
+
     SDL_Surface *loadedSurface = SDL_LoadBMP(path.c_str());
     if (loadedSurface == nullptr) {
         printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
+        return optimizedSurface;
     }
 
-    return loadedSurface;
+    // Convert surface to screen format
+    optimizedSurface = SDL_ConvertSurface(loadedSurface, gScreenSurface->format, 0);
+    SDL_FreeSurface(loadedSurface);
+
+    if (optimizedSurface == nullptr) {
+        printf( "Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
+    }
+
+    return optimizedSurface;
 }
