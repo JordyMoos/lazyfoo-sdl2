@@ -13,6 +13,8 @@ public:
     void free();
 
     void setColor(Uint8 red, Uint8 green, Uint8 blue);
+    void setAlpha(Uint8 alpha);
+    void setBlendMode(SDL_BlendMode blendMode);
     void render(int x, int y, SDL_Rect* clip = nullptr);
 
     int getWidth() const;

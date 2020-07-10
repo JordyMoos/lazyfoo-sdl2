@@ -17,6 +17,7 @@ void close();
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 Texture gModulatedTexture;
+Texture gBackgroundTexture;
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -39,46 +40,30 @@ int mainWrapper() {
     bool quit = false;
     SDL_Event e;
 
-    Uint8 r = 255;
-    Uint8 g = 255;
-    Uint8 b = 255;
+    Uint8 a = 255;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
-            }
-            else if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                    //Increase red
-                    case SDLK_q:
-                        r += 32;
-                        break;
-
-                        //Increase green
-                    case SDLK_w:
-                        g += 32;
-                        break;
-
-                        //Increase blue
-                    case SDLK_e:
-                        b += 32;
-                        break;
-
-                        //Decrease red
-                    case SDLK_a:
-                        r -= 32;
-                        break;
-
-                        //Decrease green
-                    case SDLK_s:
-                        g -= 32;
-                        break;
-
-                        //Decrease blue
-                    case SDLK_d:
-                        b -= 32;
-                        break;
+            } else if (e.type == SDL_KEYDOWN) {
+                //Increase alpha on w
+                if (e.key.keysym.sym == SDLK_w) {
+                    if (a + 32 > 255) {
+                        a = 255;
+                    }
+                    else {
+                        a += 32;
+                    }
+                }
+                //Decrease alpha on s
+                else if (e.key.keysym.sym == SDLK_s) {
+                    if (a - 32 < 0) {
+                        a = 0;
+                    }
+                    else {
+                        a -= 32;
+                    }
                 }
             }
         }
@@ -86,7 +71,9 @@ int mainWrapper() {
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gModulatedTexture.setColor(r, g, b);
+        gBackgroundTexture.render(0, 0);
+
+        gModulatedTexture.setAlpha(a);
         gModulatedTexture.render(0, 0);
 
         SDL_RenderPresent(gRenderer);
@@ -131,9 +118,14 @@ bool init() {
 }
 
 bool loadMedia() {
-    //Load sprite sheet texture
-    if (!gModulatedTexture.loadFromFile("assets/colors.png")) {
-        printf("Failed to load colors.png texture!\n");
+    if (!gModulatedTexture.loadFromFile("assets/fadeout.png")) {
+        printf("Failed to load fadeout.png texture!\n");
+        return false;
+    }
+    gModulatedTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+
+    if (!gBackgroundTexture.loadFromFile("assets/fadein.png")) {
+        printf("Failed to load fadein.png texture!\n");
         return false;
     }
 
@@ -142,6 +134,7 @@ bool loadMedia() {
 
 void close() {
     gModulatedTexture.free();
+    gBackgroundTexture.free();
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
