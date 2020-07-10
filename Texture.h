@@ -10,10 +10,9 @@ public:
 
     bool loadFromFile(const std::string &path);
 
-    // Deallocates the texture
     void free();
 
-    void render(int x, int y);
+    void render(int x, int y, SDL_Rect* clip = nullptr);
 
     int getWidth() const;
     int getHeight() const;

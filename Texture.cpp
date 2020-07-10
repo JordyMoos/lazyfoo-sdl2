@@ -42,9 +42,15 @@ void Texture::free() {
     }
 }
 
-void Texture::render(int x, int y) {
+void Texture::render(int x, int y, SDL_Rect *clip) {
     SDL_Rect renderRect = {x, y, mWidth, mHeight};
-    SDL_RenderCopy(gRenderer, mTexture, NULL, &renderRect);
+
+    if (clip != nullptr) {
+        renderRect.w = clip->w;
+        renderRect.h = clip->h;
+    }
+
+    SDL_RenderCopy(gRenderer, mTexture, clip, &renderRect);
 }
 
 int Texture::getWidth() const {
