@@ -46,39 +46,31 @@ int mainWrapper() {
     bool quit = false;
     SDL_Event e;
     SDL_Color textColor = {0, 0, 0, 255};
-    Timer timer;
     std::stringstream timeText;
+    Timer fpsTimer;
+    int countedFrames = 0;
+    fpsTimer.start();
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
-            } else if (e.type == SDL_KEYDOWN) {
-                //Start/stop
-                if (e.key.keysym.sym == SDLK_s) {
-                    if (timer.isStarted()) {
-                        timer.stop();
-                    } else {
-                        timer.start();
-                    }
-                }
-                //Pause/unpause
-                else if (e.key.keysym.sym == SDLK_p) {
-                    if (timer.isPaused()) {
-                        timer.resume();
-                    } else {
-                        timer.pause();
-                    }
-                }
             }
         }
-
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
+        float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
+        // Might happen in first few frames
+        // Probably should not show fps the first second or so
+        if (avgFPS > 2000000) {
+            avgFPS = 0;
+        }
+
+
         timeText.str("");
-        timeText << "Seconds since start time " << ( timer.getTicks() / 1000.f ) ;
+        timeText << "Average FPS " << avgFPS;
         if (!gTimeTextTexture.loadFromRenderedText(timeText.str(), textColor)) {
             printf("Unable to render time texture!\n");
             return -3;
@@ -89,7 +81,8 @@ int mainWrapper() {
                                 (SCREEN_HEIGHT - gPromptTextTexture.getHeight()) / 2);
 
         SDL_RenderPresent(gRenderer);
-        SDL_Delay(16);
+        ++countedFrames;
+//        SDL_Delay(16);
     }
 
     return 0;
@@ -113,7 +106,7 @@ bool init() {
         return false;
     }
 
-    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
+    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     if (gRenderer == nullptr) {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         return false;
