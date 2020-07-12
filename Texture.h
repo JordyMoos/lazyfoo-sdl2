@@ -1,4 +1,4 @@
-#pragma LAZYFOO_SDL2_TEXTURE_H
+#pragma once
 
 #include <string>
 #include <SDL.h>

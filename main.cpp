@@ -1,13 +1,10 @@
 #include <cstdio>
-#include <string>
-#include <cmath>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include "Texture.h"
-
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+#include "Globals.h"
+#include "Button.h"
 
 int mainWrapper();
 
@@ -20,7 +17,10 @@ void close();
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 TTF_Font *gFont = nullptr;
-Texture gTextTexture;
+
+SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
+Texture gButtonSpriteSheetTexture;
+Button gButtons[ TOTAL_BUTTONS ];
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -48,13 +48,21 @@ int mainWrapper() {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
+
+            //Handle button events
+            for(auto & gButton : gButtons)
+            {
+                gButton.handleEvent( &e );
+            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gTextTexture.render( (SCREEN_WIDTH - gTextTexture.getWidth()) / 2,
-                              (SCREEN_HEIGHT - gTextTexture.getHeight()) / 2);
+        for(auto & gButton : gButtons)
+        {
+            gButton.render();
+        }
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -107,26 +115,42 @@ bool loadMedia() {
 //        return false;
 //    }
 
-    gFont = TTF_OpenFont("assets/lazy.ttf", 28);
-    if (gFont == nullptr) {
-        printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
+//    gFont = TTF_OpenFont("assets/lazy.ttf", 28);
+//    if (gFont == nullptr) {
+//        printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
+//        return false;
+//    }
+
+//    SDL_Color textColor = {0, 0, 0};
+//    if (!gTextTexture.loadFromRenderedText("Ducks go where ducks go", textColor)) {
+//        printf( "Failed to render text texture!\n" );
+//        return false;
+//    }
+
+    if ( ! gButtonSpriteSheetTexture.loadFromFile("assets/button.png")) {
         return false;
     }
 
-    SDL_Color textColor = {0, 0, 0};
-    if (!gTextTexture.loadFromRenderedText("Ducks go where ducks go", textColor)) {
-        printf( "Failed to render text texture!\n" );
-        return false;
+    for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
+        gSpriteClips[i].x = 0;
+        gSpriteClips[i].y = i * 200;
+        gSpriteClips[i].w = BUTTON_WIDTH;
+        gSpriteClips[i].h = BUTTON_HEIGHT;
     }
+
+    gButtons[0].setPosition(0, 0);
+    gButtons[1].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, 0);
+    gButtons[2].setPosition(0, SCREEN_HEIGHT - BUTTON_HEIGHT);
+    gButtons[3].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
 
     return true;
 }
 
 void close() {
-    gTextTexture.free();
+    gButtonSpriteSheetTexture.free();
 
-    TTF_CloseFont(gFont);
-    gFont = nullptr;
+//    TTF_CloseFont(gFont);
+//    gFont = nullptr;
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
