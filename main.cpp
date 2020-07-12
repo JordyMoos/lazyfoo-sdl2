@@ -5,6 +5,7 @@
 #include <SDL_ttf.h>
 #include "Texture.h"
 #include "Timer.h"
+#include "Dot.h"
 #include "Globals.h"
 
 int mainWrapper();
@@ -22,6 +23,7 @@ TTF_Font *gFont = nullptr;
 Texture gPromptTextTexture;
 Texture gTimeTextTexture;
 
+Texture gDotTexture;
 Texture gButtonSpriteSheetTexture;
 SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
@@ -45,44 +47,26 @@ int mainWrapper() {
 
     bool quit = false;
     SDL_Event e;
-    SDL_Color textColor = {0, 0, 0, 255};
-    std::stringstream timeText;
-    Timer fpsTimer;
-    int countedFrames = 0;
-    fpsTimer.start();
+    Dot dot;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
+
+            dot.handleEvent(e);
         }
+
+        dot.move();
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        float avgFPS = countedFrames / (fpsTimer.getTicks() / 1000.f);
-        // Might happen in first few frames
-        // Probably should not show fps the first second or so
-        if (avgFPS > 2000000) {
-            avgFPS = 0;
-        }
-
-
-        timeText.str("");
-        timeText << "Average FPS " << avgFPS;
-        if (!gTimeTextTexture.loadFromRenderedText(timeText.str(), textColor)) {
-            printf("Unable to render time texture!\n");
-            return -3;
-        }
-
-        gPromptTextTexture.render((SCREEN_WIDTH - gPromptTextTexture.getWidth()) / 2, 0);
-        gTimeTextTexture.render((SCREEN_WIDTH - gPromptTextTexture.getWidth()) / 2,
-                                (SCREEN_HEIGHT - gPromptTextTexture.getHeight()) / 2);
+        dot.render();
 
         SDL_RenderPresent(gRenderer);
-        ++countedFrames;
-//        SDL_Delay(16);
+        SDL_Delay(16);
     }
 
     return 0;
@@ -106,7 +90,7 @@ bool init() {
         return false;
     }
 
-    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED);
     if (gRenderer == nullptr) {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         return false;
@@ -137,6 +121,10 @@ bool loadMedia() {
     SDL_Color textColor = {0, 0, 0, 255};
     if (!gPromptTextTexture.loadFromRenderedText("Please Enter to Reset Start Time.", textColor)) {
         printf("Failed to render text texture!\n");
+        return false;
+    }
+
+    if (!gDotTexture.loadFromFile("assets/dot.png")) {
         return false;
     }
 

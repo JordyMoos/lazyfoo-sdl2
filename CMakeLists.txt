@@ -14,7 +14,7 @@ find_package(SDL2_gfx REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} main.cpp Texture.cpp Texture.h Button.cpp Button.h Globals.h Timer.cpp Timer.h)
+add_executable(${PROJECT_NAME} main.cpp Texture.cpp Texture.h Button.cpp Button.h Globals.h Timer.cpp Timer.h Dot.cpp Dot.h)
 
 target_link_libraries(${PROJECT_NAME} SDL2::Main SDL2::Image SDL2::Mixer SDL2::TTF SDL2::GFX)
 
