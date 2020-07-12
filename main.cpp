@@ -1,10 +1,10 @@
 #include <cstdio>
+#include <sstream>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include "Texture.h"
 #include "Globals.h"
-#include "Button.h"
 
 int mainWrapper();
 
@@ -18,11 +18,8 @@ SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 TTF_Font *gFont = nullptr;
 
-Texture gPressTexture;
-Texture gUpTexture;
-Texture gDownTexture;
-Texture gLeftTexture;
-Texture gRightTexture;
+Texture gPromptTextTexture;
+Texture gTimeTextTexture;
 
 Texture gButtonSpriteSheetTexture;
 SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
@@ -47,32 +44,33 @@ int mainWrapper() {
 
     bool quit = false;
     SDL_Event e;
-    Texture *currentTexture = nullptr;
+    SDL_Color textColor = {0, 0, 0, 255};
+    Uint32 startTime = 0;
+    std::stringstream timeText;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
+                startTime = SDL_GetTicks();
             }
         }
 
-        const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
-        if (currentKeyStates[SDL_SCANCODE_UP]) {
-            currentTexture = &gUpTexture;
-        } else if (currentKeyStates[SDL_SCANCODE_DOWN]) {
-            currentTexture = &gDownTexture;
-        } else if (currentKeyStates[SDL_SCANCODE_LEFT]) {
-            currentTexture = &gLeftTexture;
-        } else if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
-            currentTexture = &gRightTexture;
-        } else {
-            currentTexture = &gPressTexture;
-        }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        currentTexture->render(0, 0);
+        timeText.str("");
+        timeText << "Milliseconds since start time " << SDL_GetTicks() - startTime;
+        if (!gTimeTextTexture.loadFromRenderedText(timeText.str(), textColor)) {
+            printf("Unable to render time texture!\n");
+            return -3;
+        }
+
+        gPromptTextTexture.render((SCREEN_WIDTH - gPromptTextTexture.getWidth()) / 2, 0);
+        gTimeTextTexture.render((SCREEN_WIDTH - gPromptTextTexture.getWidth()) / 2,
+                                (SCREEN_HEIGHT - gPromptTextTexture.getHeight()) / 2);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -125,39 +123,15 @@ bool loadMedia() {
 //        return false;
 //    }
 
-//    gFont = TTF_OpenFont("assets/lazy.ttf", 28);
-//    if (gFont == nullptr) {
-//        printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
-//        return false;
-//    }
-
-//    SDL_Color textColor = {0, 0, 0};
-//    if (!gTextTexture.loadFromRenderedText("Ducks go where ducks go", textColor)) {
-//        printf( "Failed to render text texture!\n" );
-//        return false;
-//    }
-
-    if (!gPressTexture.loadFromFile("assets/press.png")) {
+    gFont = TTF_OpenFont("assets/lazy.ttf", 28);
+    if (gFont == nullptr) {
+        printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
         return false;
     }
 
-    //Load up texture
-    if (!gUpTexture.loadFromFile("assets/up.png")) {
-        return false;
-    }
-
-    //Load down texture
-    if (!gDownTexture.loadFromFile("assets/down.png")) {
-        return false;
-    }
-
-    //Load left texture
-    if (!gLeftTexture.loadFromFile("assets/left.png")) {
-        return false;
-    }
-
-    //Load right texture
-    if (!gRightTexture.loadFromFile("assets/right.png")) {
+    SDL_Color textColor = {0, 0, 0, 255};
+    if (!gPromptTextTexture.loadFromRenderedText("Please Enter to Reset Start Time.", textColor)) {
+        printf("Failed to render text texture!\n");
         return false;
     }
 
@@ -165,14 +139,11 @@ bool loadMedia() {
 }
 
 void close() {
-    gPressTexture.free();
-    gUpTexture.free();
-    gDownTexture.free();
-    gLeftTexture.free();
-    gRightTexture.free();
+    gPromptTextTexture.free();
+    gTimeTextTexture.free();
 
-//    TTF_CloseFont(gFont);
-//    gFont = nullptr;
+    TTF_CloseFont(gFont);
+    gFont = nullptr;
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
