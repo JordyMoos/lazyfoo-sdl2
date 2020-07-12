@@ -1,6 +1,9 @@
 #include <cstdio>
+#include <string>
+#include <cmath>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include "Texture.h"
 
 const int SCREEN_WIDTH = 640;
@@ -16,8 +19,8 @@ void close();
 
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
-
-Texture gArrowTexture;
+TTF_Font *gFont = nullptr;
+Texture gTextTexture;
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -39,47 +42,19 @@ int mainWrapper() {
 
     bool quit = false;
     SDL_Event e;
-    double degrees = 0;
-    SDL_RendererFlip flipType = SDL_FLIP_NONE;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
-            else if( e.type == SDL_KEYDOWN )
-            {
-                switch( e.key.keysym.sym )
-                {
-                    case SDLK_a:
-                        degrees -= 60;
-                        break;
-
-                    case SDLK_d:
-                        degrees += 60;
-                        break;
-
-                    case SDLK_q:
-                        flipType = SDL_FLIP_HORIZONTAL;
-                        break;
-
-                    case SDLK_w:
-                        flipType = SDL_FLIP_NONE;
-                        break;
-
-                    case SDLK_e:
-                        flipType = SDL_FLIP_VERTICAL;
-                        break;
-                }
-            }
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        gArrowTexture.render( (SCREEN_WIDTH - gArrowTexture.getWidth()) / 2,
-                              (SCREEN_HEIGHT - gArrowTexture.getHeight()) / 2,
-                              nullptr, degrees, nullptr, flipType);
+        gTextTexture.render( (SCREEN_WIDTH - gTextTexture.getWidth()) / 2,
+                              (SCREEN_HEIGHT - gTextTexture.getHeight()) / 2);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -119,11 +94,28 @@ bool init() {
         return false;
     }
 
+    if (TTF_Init() == -1) {
+        printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
+        return false;
+    }
+
     return true;
 }
 
 bool loadMedia() {
-    if (!gArrowTexture.loadFromFile("assets/arrow.png")) {
+//    if (!gArrowTexture.loadFromFile("assets/arrow.png")) {
+//        return false;
+//    }
+
+    gFont = TTF_OpenFont("assets/lazy.ttf", 28);
+    if (gFont == nullptr) {
+        printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
+        return false;
+    }
+
+    SDL_Color textColor = {0, 0, 0};
+    if (!gTextTexture.loadFromRenderedText("Ducks go where ducks go", textColor)) {
+        printf( "Failed to render text texture!\n" );
         return false;
     }
 
@@ -131,7 +123,10 @@ bool loadMedia() {
 }
 
 void close() {
-    gArrowTexture.free();
+    gTextTexture.free();
+
+    TTF_CloseFont(gFont);
+    gFont = nullptr;
 
     if (gRenderer != nullptr) {
         SDL_DestroyRenderer(gRenderer);
@@ -143,6 +138,7 @@ void close() {
         gWindow = nullptr;
     }
 
+    TTF_Quit();
     IMG_Quit();
     SDL_Quit();
 }

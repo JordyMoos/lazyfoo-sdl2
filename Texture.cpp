@@ -1,8 +1,10 @@
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include "Texture.h"
 
 extern SDL_Renderer *gRenderer;
+extern TTF_Font *gFont;
 
 Texture::Texture(): mTexture(nullptr), mWidth(0), mHeight(0) {}
 
@@ -13,24 +15,44 @@ Texture::~Texture() {
 bool Texture::loadFromFile(const std::string &path) {
     free();
 
-    SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-    if (loadedSurface == nullptr) {
+    SDL_Surface* surface = IMG_Load(path.c_str());
+    if (surface == nullptr) {
         printf( "Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError() );
         return false;
     }
 
-    SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
-    mWidth = loadedSurface->w;
-    mHeight = loadedSurface->h;
+    SDL_SetColorKey(surface, SDL_TRUE, SDL_MapRGB(surface->format, 0, 0xFF, 0xFF));
 
-    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(gRenderer, loadedSurface);
-    SDL_FreeSurface(loadedSurface);
-    if (newTexture == nullptr) {
+    mTexture = SDL_CreateTextureFromSurface(gRenderer, surface);
+    mWidth = surface->w;
+    mHeight = surface->h;
+    SDL_FreeSurface(surface);
+    if (mTexture == nullptr) {
         printf( "Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
         return false;
     }
 
-    mTexture = newTexture;
+    return true;
+}
+
+bool Texture::loadFromRenderedText(const std::string &text, SDL_Color color) {
+    free();
+
+    SDL_Surface* surface = TTF_RenderText_Solid(gFont, text.c_str(), color);
+    if (surface == nullptr) {
+        printf( "Unable to render text surface! SDL_ttf Error: %s\n", TTF_GetError() );
+        return false;
+    }
+
+    mTexture = SDL_CreateTextureFromSurface(gRenderer, surface);
+    mWidth = surface->w;
+    mHeight = surface->h;
+    SDL_FreeSurface(surface);
+    if (mTexture == nullptr) {
+        printf( "Unable to create texture from rendered text! SDL Error: %s\n", SDL_GetError() );
+        return false;
+    }
+
     return true;
 }
 

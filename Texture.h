@@ -9,6 +9,7 @@ public:
     ~Texture();
 
     bool loadFromFile(const std::string &path);
+    bool loadFromRenderedText(const std::string &text, SDL_Color color);
 
     void free();
 
