@@ -4,6 +4,7 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include "Texture.h"
+#include "Timer.h"
 #include "Globals.h"
 
 int mainWrapper();
@@ -45,15 +46,30 @@ int mainWrapper() {
     bool quit = false;
     SDL_Event e;
     SDL_Color textColor = {0, 0, 0, 255};
-    Uint32 startTime = 0;
+    Timer timer;
     std::stringstream timeText;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
-            } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN) {
-                startTime = SDL_GetTicks();
+            } else if (e.type == SDL_KEYDOWN) {
+                //Start/stop
+                if (e.key.keysym.sym == SDLK_s) {
+                    if (timer.isStarted()) {
+                        timer.stop();
+                    } else {
+                        timer.start();
+                    }
+                }
+                //Pause/unpause
+                else if (e.key.keysym.sym == SDLK_p) {
+                    if (timer.isPaused()) {
+                        timer.resume();
+                    } else {
+                        timer.pause();
+                    }
+                }
             }
         }
 
@@ -62,7 +78,7 @@ int mainWrapper() {
         SDL_RenderClear(gRenderer);
 
         timeText.str("");
-        timeText << "Milliseconds since start time " << SDL_GetTicks() - startTime;
+        timeText << "Seconds since start time " << ( timer.getTicks() / 1000.f ) ;
         if (!gTimeTextTexture.loadFromRenderedText(timeText.str(), textColor)) {
             printf("Unable to render time texture!\n");
             return -3;
@@ -119,10 +135,6 @@ bool init() {
 }
 
 bool loadMedia() {
-//    if (!gArrowTexture.loadFromFile("assets/arrow.png")) {
-//        return false;
-//    }
-
     gFont = TTF_OpenFont("assets/lazy.ttf", 28);
     if (gFont == nullptr) {
         printf("Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
