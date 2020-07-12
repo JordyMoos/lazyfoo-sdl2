@@ -3,9 +3,11 @@
 #include "Texture.h"
 
 extern Texture gDotTexture;
+extern bool checkCollision(SDL_Rect a, SDL_Rect b);
 
 Dot::Dot() : mPosX(0), mPosY(0), mVelX(0), mVelY(0) {
-
+    mCollider.w = DOT_WIDTH;
+    mCollider.h = DOT_HEIGHT;
 }
 
 void Dot::handleEvent(SDL_Event &e) {
@@ -42,15 +44,23 @@ void Dot::handleEvent(SDL_Event &e) {
     }
 }
 
-void Dot::move() {
+void Dot::move(const SDL_Rect &wall) {
     mPosX += mVelX;
-    if ((mPosX < 0) || (mPosX + DOT_WIDTH > SCREEN_WIDTH)) {
+    mCollider.x = mPosX;
+    if( ( mPosX < 0 ) || ( mPosX + DOT_WIDTH > SCREEN_WIDTH ) || checkCollision( mCollider, wall ) )
+    {
+        //Move back
         mPosX -= mVelX;
+        mCollider.x = mPosX;
     }
 
     mPosY += mVelY;
-    if ((mPosY < 0) || (mPosY + DOT_HEIGHT > SCREEN_HEIGHT)) {
+    mCollider.y = mPosY;
+    if( ( mPosY < 0 ) || ( mPosY + DOT_HEIGHT > SCREEN_HEIGHT ) || checkCollision( mCollider, wall ) )
+    {
+        //Move back
         mPosY -= mVelY;
+        mCollider.y = mPosY;
     }
 }
 

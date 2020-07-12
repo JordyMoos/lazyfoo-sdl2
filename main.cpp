@@ -16,6 +16,8 @@ bool loadMedia();
 
 void close();
 
+bool checkCollision(SDL_Rect a, SDL_Rect b);
+
 SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 TTF_Font *gFont = nullptr;
@@ -49,6 +51,12 @@ int mainWrapper() {
     SDL_Event e;
     Dot dot;
 
+    SDL_Rect wall;
+    wall.x = 300;
+    wall.y = 40;
+    wall.w = 40;
+    wall.h = 400;
+
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
@@ -58,10 +66,13 @@ int mainWrapper() {
             dot.handleEvent(e);
         }
 
-        dot.move();
+        dot.move(wall);
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
+
+        SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
+        SDL_RenderDrawRect( gRenderer, &wall );
 
         dot.render();
 
@@ -151,4 +162,41 @@ void close() {
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
+}
+
+bool checkCollision(SDL_Rect a, SDL_Rect b) {
+    int leftA, leftB;
+    int rightA, rightB;
+    int topA, topB;
+    int bottomA, bottomB;
+
+    leftA = a.x;
+    rightA = a.x + a.w;
+    topA = a.y;
+    bottomA = a.y + a.h;
+
+    leftB = b.x;
+    rightB = b.x + b.w;
+    topB = b.y;
+    bottomB = b.y + b.h;
+
+    //If any of the sides from A are outside of B
+    if (bottomA <= topB) {
+        return false;
+    }
+
+    if (topA >= bottomB) {
+        return false;
+    }
+
+    if (rightA <= leftB) {
+        return false;
+    }
+
+    if (leftA >= rightB) {
+        return false;
+    }
+
+    //If none of the sides from A are outside B
+    return true;
 }

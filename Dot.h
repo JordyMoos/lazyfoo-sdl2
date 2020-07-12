@@ -13,13 +13,14 @@ public:
 
     void handleEvent(SDL_Event &e);
 
-    void move();
+    void move(const SDL_Rect &wall);
 
     void render();
 
 private:
     int mPosX, mPosY;
     int mVelX, mVelY;
+    SDL_Rect mCollider;
 };
 
 
