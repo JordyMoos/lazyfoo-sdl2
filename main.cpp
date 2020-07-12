@@ -18,9 +18,14 @@ SDL_Window *gWindow = nullptr;
 SDL_Renderer *gRenderer = nullptr;
 TTF_Font *gFont = nullptr;
 
-SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
+Texture gPressTexture;
+Texture gUpTexture;
+Texture gDownTexture;
+Texture gLeftTexture;
+Texture gRightTexture;
+
 Texture gButtonSpriteSheetTexture;
-Button gButtons[ TOTAL_BUTTONS ];
+SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
 int main(int argc, char *args[]) {
     int response = mainWrapper();
@@ -42,27 +47,32 @@ int mainWrapper() {
 
     bool quit = false;
     SDL_Event e;
+    Texture *currentTexture = nullptr;
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
             }
+        }
 
-            //Handle button events
-            for(auto & gButton : gButtons)
-            {
-                gButton.handleEvent( &e );
-            }
+        const Uint8 *currentKeyStates = SDL_GetKeyboardState(NULL);
+        if (currentKeyStates[SDL_SCANCODE_UP]) {
+            currentTexture = &gUpTexture;
+        } else if (currentKeyStates[SDL_SCANCODE_DOWN]) {
+            currentTexture = &gDownTexture;
+        } else if (currentKeyStates[SDL_SCANCODE_LEFT]) {
+            currentTexture = &gLeftTexture;
+        } else if (currentKeyStates[SDL_SCANCODE_RIGHT]) {
+            currentTexture = &gRightTexture;
+        } else {
+            currentTexture = &gPressTexture;
         }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        for(auto & gButton : gButtons)
-        {
-            gButton.render();
-        }
+        currentTexture->render(0, 0);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -127,27 +137,39 @@ bool loadMedia() {
 //        return false;
 //    }
 
-    if ( ! gButtonSpriteSheetTexture.loadFromFile("assets/button.png")) {
+    if (!gPressTexture.loadFromFile("assets/press.png")) {
         return false;
     }
 
-    for (int i = 0; i < BUTTON_SPRITE_TOTAL; i++) {
-        gSpriteClips[i].x = 0;
-        gSpriteClips[i].y = i * 200;
-        gSpriteClips[i].w = BUTTON_WIDTH;
-        gSpriteClips[i].h = BUTTON_HEIGHT;
+    //Load up texture
+    if (!gUpTexture.loadFromFile("assets/up.png")) {
+        return false;
     }
 
-    gButtons[0].setPosition(0, 0);
-    gButtons[1].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, 0);
-    gButtons[2].setPosition(0, SCREEN_HEIGHT - BUTTON_HEIGHT);
-    gButtons[3].setPosition(SCREEN_WIDTH - BUTTON_WIDTH, SCREEN_HEIGHT - BUTTON_HEIGHT);
+    //Load down texture
+    if (!gDownTexture.loadFromFile("assets/down.png")) {
+        return false;
+    }
+
+    //Load left texture
+    if (!gLeftTexture.loadFromFile("assets/left.png")) {
+        return false;
+    }
+
+    //Load right texture
+    if (!gRightTexture.loadFromFile("assets/right.png")) {
+        return false;
+    }
 
     return true;
 }
 
 void close() {
-    gButtonSpriteSheetTexture.free();
+    gPressTexture.free();
+    gUpTexture.free();
+    gDownTexture.free();
+    gLeftTexture.free();
+    gRightTexture.free();
 
 //    TTF_CloseFont(gFont);
 //    gFont = nullptr;
