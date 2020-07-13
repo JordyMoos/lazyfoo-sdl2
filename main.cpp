@@ -25,6 +25,7 @@ TTF_Font *gFont = nullptr;
 Texture gPromptTextTexture;
 Texture gTimeTextTexture;
 
+Texture gBGTexture;
 Texture gDotTexture;
 Texture gButtonSpriteSheetTexture;
 SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
@@ -50,12 +51,7 @@ int mainWrapper() {
     bool quit = false;
     SDL_Event e;
     Dot dot;
-
-    SDL_Rect wall;
-    wall.x = 300;
-    wall.y = 40;
-    wall.w = 40;
-    wall.h = 400;
+    SDL_Rect camera = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
     while (!quit) {
         while (SDL_PollEvent(&e) != 0) {
@@ -66,15 +62,29 @@ int mainWrapper() {
             dot.handleEvent(e);
         }
 
-        dot.move(wall);
+        dot.move();
+
+        camera.x = (dot.getPosX() + Dot::DOT_WIDTH / 2) - SCREEN_WIDTH / 2;
+        camera.y = (dot.getPosY() + Dot::DOT_HEIGHT / 2) - SCREEN_HEIGHT / 2;
+
+        if (camera.x < 0) {
+            camera.x = 0;
+        }
+        if (camera.y < 0) {
+            camera.y = 0;
+        }
+        if (camera.x > LEVEL_WIDTH - camera.w) {
+            camera.x = LEVEL_WIDTH - camera.w;
+        }
+        if (camera.y > LEVEL_HEIGHT - camera.h) {
+            camera.y = LEVEL_HEIGHT - camera.h;
+        }
 
         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
         SDL_RenderClear(gRenderer);
 
-        SDL_SetRenderDrawColor( gRenderer, 0x00, 0x00, 0x00, 0xFF );
-        SDL_RenderDrawRect( gRenderer, &wall );
-
-        dot.render();
+        gBGTexture.render(0, 0, &camera);
+        dot.render(camera.x, camera.y);
 
         SDL_RenderPresent(gRenderer);
         SDL_Delay(16);
@@ -139,12 +149,18 @@ bool loadMedia() {
         return false;
     }
 
+    if (!gBGTexture.loadFromFile("assets/bg.png")) {
+        return false;
+    }
+
     return true;
 }
 
 void close() {
     gPromptTextTexture.free();
     gTimeTextTexture.free();
+    gDotTexture.free();
+    gBGTexture.free();
 
     TTF_CloseFont(gFont);
     gFont = nullptr;

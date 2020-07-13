@@ -44,26 +44,30 @@ void Dot::handleEvent(SDL_Event &e) {
     }
 }
 
-void Dot::move(const SDL_Rect &wall) {
+void Dot::move() {
     mPosX += mVelX;
-    mCollider.x = mPosX;
-    if( ( mPosX < 0 ) || ( mPosX + DOT_WIDTH > SCREEN_WIDTH ) || checkCollision( mCollider, wall ) )
+    if( ( mPosX < 0 ) || ( mPosX + DOT_WIDTH > LEVEL_WIDTH ) )
     {
         //Move back
         mPosX -= mVelX;
-        mCollider.x = mPosX;
     }
 
     mPosY += mVelY;
-    mCollider.y = mPosY;
-    if( ( mPosY < 0 ) || ( mPosY + DOT_HEIGHT > SCREEN_HEIGHT ) || checkCollision( mCollider, wall ) )
+    if( ( mPosY < 0 ) || ( mPosY + DOT_HEIGHT > LEVEL_HEIGHT ) )
     {
         //Move back
         mPosY -= mVelY;
-        mCollider.y = mPosY;
     }
 }
 
-void Dot::render() {
-    gDotTexture.render(mPosX, mPosY);
+void Dot::render(int camX, int camY) {
+    gDotTexture.render(mPosX - camX, mPosY - camY);
+}
+
+int Dot::getPosX() {
+    return mPosX;
+}
+
+int Dot::getPosY() {
+    return mPosY;
 }

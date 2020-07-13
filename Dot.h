@@ -7,15 +7,18 @@ class Dot
 public:
     static const int DOT_WIDTH = 20;
     static const int DOT_HEIGHT = 20;
-    static const int DOT_VEL = 5;
+    static const int DOT_VEL = 10;
 
     Dot();
 
     void handleEvent(SDL_Event &e);
 
-    void move(const SDL_Rect &wall);
+    void move();
 
-    void render();
+    void render(int camX, int camY);
+
+    int getPosX();
+    int getPosY();
 
 private:
     int mPosX, mPosY;
